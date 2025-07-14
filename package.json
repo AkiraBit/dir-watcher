@@ -1,0 +1,23 @@
+{
+  "name": "dir-watcher",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch test/index.ts"
+  },
+  "keywords": [],
+  "author": "AkiraBit",
+  "license": "MIT",
+  "description": "A simple directory watcher",
+  "dependencies": {
+    "lodash.debounce": "^4.0.8",
+    "readdirp": "^4.1.2"
+  },
+  "devDependencies": {
+    "@types/lodash.debounce": "^4.0.9",
+    "@types/node": "^24.0.3",
+    "tsx": "^4.20.3"
+  }
+}

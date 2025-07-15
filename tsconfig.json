@@ -1,12 +1,15 @@
 {
 	"compilerOptions": {
-		"target": "ESNext",
-		"module": "CommonJS",
+		"target": "ES2015",
+		"module": "ESNext",
+		"moduleResolution": "node",
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,
-		"strict": false,
-		"skipLibCheck": true
+		"skipLibCheck": true,
+		"declaration": true,
+		"noImplicitAny": false,
+		"strict": false
 	},
 	"include": ["src/**/*"],
-	"exclude": ["node_modules", "dist"]
+	"exclude": ["node_modules", "dist", "test"]
 }

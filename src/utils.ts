@@ -71,12 +71,12 @@ export function hashFile(
 }
 
 export function normalizePath(filePath: string): string {
-	// 如果路径为空或只有分隔符，直接返回
+	// If the path is empty or just a separator, return it directly.
 	if (!filePath || filePath === sep) {
 		return filePath;
 	}
 
-	// 移除路径末尾的分隔符
-	// 兼容 Windows 的反斜杠和 Unix 的正斜杠
+	// Remove trailing separators from the path.
+	// Compatible with both Windows backslashes and Unix forward slashes.
 	return filePath.replace(/[/\\]+$/, "");
 }

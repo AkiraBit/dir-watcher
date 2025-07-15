@@ -3,21 +3,21 @@ import { normalizePath } from "./utils";
 import { sep } from "node:path";
 
 export class DirTreeNode<T> {
-	// 节点名称，文件节点：带扩展名的文件名，目录节点：目录名
+	// Node name. For file nodes, it's the filename with extension. For directory nodes, it's the directory name.
 	name: string;
-	// 节点唯一标识，目录节点：stats.ino + stats.dev，文件节点：内容哈希
+	// Unique identifier for the node. For directory nodes: stats.ino + stats.dev. For file nodes: content hash.
 	key: string;
-	// 节点绝对路径
+	// Absolute path of the node.
 	fullPath: string;
-	// 节点类型
+	// Node type.
 	node_type: NodeType;
-	// 节点父节点
+	// Parent node of this node.
 	parent?: DirTreeNode<T> | null;
-	// 目录节点的子节点
+	// Child nodes for a directory node.
 	children?: Map<string, DirTreeNode<T>> | null;
-	// 文件节点的内容哈希
+	// Content hash for a file node.
 	content_hash?: string | null;
-	// 文件节点数据
+	// Data for a file node.
 	data?: T;
 
 	constructor(payload: {
@@ -82,8 +82,8 @@ export class DirTree<T> {
 		data?: T
 	) => {
 		/**
-		 * widnows:['C:', 'Users', 'lakss', 'Documents', 'file.txt']
-		 * linux/macos:['home', 'lakss', 'Documents', 'file.txt']
+		 * windows: ['C:', 'Users', 'username', 'Documents', 'file.txt']
+		 * linux/macos: ['home', 'username', 'Documents', 'file.txt']
 		 */
 		const segments = path
 			.replace(this.root.fullPath, "")

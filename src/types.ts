@@ -24,51 +24,51 @@ export interface DirTreeStats {
 }
 
 /**
- * 事件类型
+ * Event types
  */
 export enum Event {
 	/**
-	 * 初始化完成，可以开始监听
+	 * Initialization is complete and listening can begin.
 	 */
 	READY = "READY",
 	/**
-	 * 监听器捕获的非致命错误
+	 * Non-fatal error captured by the listener.
 	 */
 	WALK_WARN = "WALK_WARN",
 	/**
-	 * 自监听器捕获的自身ENOENT错误，表示监听的目录不存在
+	 * SELF_ENOENT error captured by the self-listener, indicating that the watched directory does not exist.
 	 */
 	SELF_ENOENT = "SELF_ENOENT",
 	/**
-	 * 来自fs.watch的原始事件
+	 * Raw event from fs.watch.
 	 */
 	RAW = "RAW",
 	/**
-	 * 监听器捕获的错误
+	 * Error captured by the listener.
 	 */
 	ERROR = "ERROR",
 	/**
-	 * 监听器关闭
+	 * Listener is closed.
 	 */
 	CLOSE = "CLOSE",
 	/**
-	 * 添加文件
+	 * A file has been added.
 	 */
 	ADD = "ADD",
 	/**
-	 * 删除文件
+	 * A file has been removed.
 	 */
 	REMOVE = "REMOVE",
 	/**
-	 * 修改文件
+	 * A file has been changed.
 	 */
 	CHANGE = "CHANGE",
 	/**
-	 * 修改文件名
+	 * A file has been renamed.
 	 */
 	RENAME = "RENAME",
 	/**
-	 * 移动文件
+	 * A file has been moved.
 	 */
 	MOVE = "MOVE",
 }

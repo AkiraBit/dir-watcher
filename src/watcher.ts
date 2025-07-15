@@ -186,7 +186,7 @@ export class Watcher extends EventEmitter<DirWatcherEventMap> {
 		emitterQueue.clear();
 		this._isProcessing = false;
 
-		// 如果在处理期间又有新事件，再次触发
+		// If there are new events during processing, trigger again
 		if (this._eventQueue.size > 0) {
 			this._eventsHandler();
 		}
@@ -208,7 +208,7 @@ export class Watcher extends EventEmitter<DirWatcherEventMap> {
 			for (const path of paths) {
 				const newNode = newTree.getNode(path);
 				const oldNode = this._dirTree.getNode(path);
-				// 判断是否新增
+				// Check if it's a new addition
 				if (newNode && !oldNode) {
 					if (newNode?.isDirectory) {
 						const newNodeTree = await this._buildDirTree(newNode?.fullPath, {
@@ -250,7 +250,7 @@ export class Watcher extends EventEmitter<DirWatcherEventMap> {
 						});
 					}
 				}
-				// 判断是否删除
+				// Check if it's a deletion
 				else if (!newNode && oldNode) {
 					if (!(await exists(oldNode?.fullPath))) {
 						if (oldNode?.isDirectory) {
@@ -333,22 +333,26 @@ export class Watcher extends EventEmitter<DirWatcherEventMap> {
 	private _debouncedHandler = debounce(this._eventsHandler, 100);
 
 	private _watch = () => {
-		this._watcher = watch(
-			this._path,
-			{ recursive: true, persistent: true },
-			(eventType, filename) => {
-				if (!filename) return;
-				const fullPath = join(this._path, filename);
-				const { dir } = parse(fullPath);
-				this.emit(Event.RAW, eventType, fullPath);
-				if (!this._eventQueue.has(dir)) {
-					this._eventQueue.set(dir, new Set([fullPath]));
-				} else {
-					this._eventQueue.get(dir).add(fullPath);
+		try {
+			this._watcher = watch(
+				this._path,
+				{ recursive: true },
+				(event: WatchEventType, filename: string | Buffer | null) => {
+					if (filename) {
+						// The filename may not be a complete path, so we need to join it with the root path
+						const fullPath = join(this._path, filename.toString());
+						const { dir } = parse(fullPath);
+						if (!this._eventQueue.has(dir)) {
+							this._eventQueue.set(dir, new Set());
+						}
+						this._eventQueue.get(dir)?.add(fullPath);
+						this._debouncedHandler();
+					}
 				}
-				this._debouncedHandler();
-			}
-		);
+			);
+		} catch (error) {
+			this._errorHandler(error);
+		}
 	};
 
 	private _errorHandler = (error: unknown) => {

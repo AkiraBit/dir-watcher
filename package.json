@@ -1,13 +1,25 @@
 {
-  "name": "dir-watcher",
+  "name": "dirspy",
+  "description": "A simple, efficient and flexible cross-platform directory watching library",
   "version": "1.0.0",
-  "author": "AkiraBit",
+  "author": "akirabit",
   "license": "MIT",
-  "main": "dist/index.js",
-  "type": "module",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/index.d.ts",
+  "email": "fengyvxiu@gmail.com",
   "scripts": {
-    "build": "tsc",
-    "dev": "tsx watch test/index.ts"
+    "build": "npm run clean && rollup -c",
+    "clean": "rm -rf dist",
+    "dev": "tsx watch test/index.ts",
+    "release": "npm run build && npm publish --access public"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "types": "./dist/index.d.ts"
+    }
   },
   "files": [
     "dist"
@@ -22,14 +34,21 @@
     "watchDirectory",
     "directory-watcher"
   ],
-  "description": "A simple directory watcher",
   "dependencies": {
     "lodash.debounce": "^4.0.8",
     "readdirp": "^4.1.2"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.4",
     "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^24.0.3",
+    "rollup": "^4.45.0",
+    "rollup-plugin-dts": "^6.2.1",
+    "tslib": "^2.8.1",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3"
   },
@@ -39,9 +58,9 @@
   "sideEffects": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AkiraBit/dir-watcher.git"
+    "url": "git+https://github.com/AkiraBit/dirspy.git"
   },
   "bugs": {
-    "url": "https://github.com/AkiraBit/dir-watcher/issues"
+    "url": "https://github.com/AkiraBit/dirspy/issues"
   }
 }

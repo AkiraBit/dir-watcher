@@ -1,14 +1,14 @@
 # 📁 🕵️ dirspy
 
-精简、高效的跨平台目录监控库。
+A simple, efficient, cross-platform directory monitoring library.
 
-这个库的诞生是因为[PicSharp](https://github.com/AkiraBit/PicSharp)的“监听目录中新增图片并自动处理”功能需要一个跨平台的目录监听库。最初我分别使用的是 Rust 的 [notify](https://crates.io/crates/notify) 和 Node.js 的[chokidar](https://github.com/paulmillr/chokidar)，它们分别是各自生态中最受欢迎的文件监听库之一，但实际使用时我发现它们在监听大文件夹（10000+ 个以上文件以及深层次的子目录）时，都存在一定问题：
+This library was created because the "monitor new images in a directory and process them automatically" feature of [PicSharp](https://github.com/AkiraBit/PicSharp) required a cross-platform directory watching library. Initially, I used Rust's [notify](https://crates.io/crates/notify) and Node.js's [chokidar](https://github.com/paulmillr/chokidar), which are among the most popular file watching libraries in their respective ecosystems. However, I found that they both have issues when watching large directories (10,000+ files and deep subdirectories):
 
-- notify: 监听大量文件时，存在性能和可靠性问题，导致 CPU 占用率过高、监听事件的触发频率降低或不触发、监听事件的触发顺序不正确等问题，参考： [notify doc: Watching large directories](https://docs.rs/notify/8.1.0/notify/#watching-large-directories)。
-- chokidar: 非轮询模式下监听大量文件时，会在初始化时耗尽操作系统所有文件句柄导致 EMFILE 和 ENOSP 错误；轮询模式可以避免文件句柄耗尽的问题，但监听大量文件时会造成 CPU 使用率过高，通常是占满，参考： [chokidar doc: Troubleshooting](https://github.com/paulmillr/chokidar?tab=readme-ov-file#troubleshooting)。
-- 除了上述问题外，它们所能监听的文件变化类型事件也有限，例如无法监听文件重命名、移动等。
+- notify: When watching a large number of files, it has performance and reliability issues, leading to high CPU usage, reduced or no event triggering, and incorrect event trigger order. See: [notify doc: Watching large directories](https://docs.rs/notify/8.1.0/notify/#watching-large-directories).
+- chokidar: When watching a large number of files in non-polling mode, it can exhaust all operating system file handles during initialization, causing EMFILE and ENOSPC errors. Polling mode can avoid the file handle exhaustion problem, but it causes high CPU usage, often maxing it out, when watching many files. See: [chokidar doc: Troubleshooting](https://github.com/paulmillr/chokidar?tab=readme-ov-file#troubleshooting).
+- In addition to the above issues, the types of file change events they can listen for are limited, for example, they cannot listen for file renames or moves.
 
-notify 和 chokidar 都久经生成环境考验，适用于大部分场景，但在监听大文件夹时无法满足我的需求，因此，我决定实现一个简单高效、专注于文件夹监控、提供更丰富的变化类型事件监听的目录监控库。
+Both notify and chokidar are battle-tested and suitable for most scenarios, but they couldn't meet my needs for watching large directories. Therefore, I decided to implement a simple, efficient directory monitoring library focused on folder watching and providing richer change event types.
 
 ## Install
 
@@ -97,46 +97,46 @@ main();
 
 ## Event
 
-| Event         | Listener                                             | Description                                                                                       |
-| ------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `READY`       | ()=>void                                             | Initialization is complete and listening can begin.                                               |
-| `WALK_WARN`   | (err: Error)=>void                                   | Non-fatal error captured while walking the directory tree.                                        |
-| `SELF_ENOENT` | ()=>void                                             | The watched directory has been changed, such as being deleted or having its location altered, etc |
-| `CLOSE`       | ()=>void                                             | The watcher is closed.                                                                            |
-| `RAW`         | (event: WatchEventType, path: string)=>void          | Raw event from fs.watch.                                                                          |
-| `ERROR`       | (err: Error)=>void                                   | Error captured during watching.                                                                   |
-| `ADD`         | (data: EventPayload)=>void                           | A file or directory has been added.                                                               |
-| `REMOVE`      | (data: EventPayload)=>void                           | A file or directory has been removed.                                                             |
-| `CHANGE`      | (data: EventPayload)=>void                           | A file or directory has been changed.                                                             |
-| `RENAME`      | (oldData: EventPayload, newData: EventPayload)=>void | A file or directory has been renamed.                                                             |
-| `MOVE`        | (from: EventPayload, to: EventPayload)=>void         | A file or directory has been moved.                                                               |
+| Event         | Listener                                             | Description                                                      |
+| ------------- | ---------------------------------------------------- | ---------------------------------------------------------------- |
+| `READY`       | ()=>void                                             | Initialization is complete and watching can begin.               |
+| `WALK_WARN`   | (err: Error)=>void                                   | A non-fatal error was captured while walking the directory tree. |
+| `SELF_ENOENT` | ()=>void                                             | The watched directory has been changed, e.g., deleted or moved.  |
+| `CLOSE`       | ()=>void                                             | The watcher has been closed.                                     |
+| `RAW`         | (event: WatchEventType, path: string)=>void          | Raw event from fs.watch.                                         |
+| `ERROR`       | (err: Error)=>void                                   | An error was captured during watching.                           |
+| `ADD`         | (data: EventPayload)=>void                           | A file or directory has been added.                              |
+| `REMOVE`      | (data: EventPayload)=>void                           | A file or directory has been removed.                            |
+| `CHANGE`      | (oldData: EventPayload, newData: EventPayload)=>void | A file or directory has been changed.                            |
+| `RENAME`      | (oldData: EventPayload, newData: EventPayload)=>void | A file or directory has been renamed.                            |
+| `MOVE`        | (from: EventPayload, to: EventPayload)=>void         | A file or directory has been moved.                              |
 
 ## API
 
 ### `watch(path: string, options?: WatchOptions)`
 
-初始化监听器，返回一个 `Watcher` 实例。
+Initializes the watcher and returns a `Watcher` instance.
 
-### `watch.close()`
+### `watcher.close()`
 
-关闭监听器。
+Closes the watcher.
 
 ### `WatchOptions`
 
-监听选项。
+Watch options.
 
-- `fileFilter(entry: EntryInfo): boolean`: 文件过滤器，用于初始化构建目录树快照时忽略不需要的文件。
-- `directoryFilter(entry: EntryInfo): boolean`: 目录过滤器，用于初始化构建目录树快照时忽略不需要的目录。
-- `depth:number`: 目录的监听深度，默认为不限制。
-- `ignored(path: string): boolean`: 内部处理`fs.watch` 事件时要忽略的文件或目录路径。
+- `fileFilter(entry: EntryInfo): boolean`: A file filter to ignore unwanted files during the initial directory tree snapshot creation.
+- `directoryFilter(entry: EntryInfo): boolean`: A directory filter to ignore unwanted directories during the initial directory tree snapshot creation.
+- `depth:number`: The depth to watch directories, defaults to no limit.
+- `ignored(path: string): boolean`: Paths to files or directories to be ignored when processing `fs.watch` events internally.
 
 ### `Watcher.closed`
 
-监听器是否已关闭。
+Whether the watcher is closed.
 
 ### `methods of EventEmitter`
 
-`Watcher` 继承自 `node:events.EventEmitter`
+`Watcher` inherits from `node:events.EventEmitter`.
 
 ## How it works
 

@@ -365,9 +365,18 @@ export class Watcher extends EventEmitter<DirWatcherEventMap> {
 	public close = () => {
 		if (this.closed) return;
 		this.closed = true;
+		this._isProcessing = false;
+		this._eventQueue.clear();
+		this._dirTree.destroy();
+		this._dirTree = null;
 		this._selfWatcher?.unref();
-		unwatchFile(this._path);
 		this._watcher?.close();
+		this._watcher?.unref();
+		unwatchFile(this._path);
+		this._watcher?.removeAllListeners();
+		this._selfWatcher = null;
+		this._watcher = null;
 		this.emit(Event.CLOSE);
+		this.removeAllListeners();
 	};
 }

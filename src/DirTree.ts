@@ -320,5 +320,6 @@ export class DirTree<T> {
 	public destroy() {
 		this._nodeMap.clear();
 		this.root.children?.clear();
+		this.root = null;
 	}
 }

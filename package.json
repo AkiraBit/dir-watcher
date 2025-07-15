@@ -1,15 +1,27 @@
 {
   "name": "dir-watcher",
   "version": "1.0.0",
+  "author": "AkiraBit",
+  "license": "MIT",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch test/index.ts"
   },
-  "keywords": [],
-  "author": "AkiraBit",
-  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "fs",
+    "file",
+    "directory",
+    "watch",
+    "watcher",
+    "watchFile",
+    "watchDirectory",
+    "directory-watcher"
+  ],
   "description": "A simple directory watcher",
   "dependencies": {
     "lodash.debounce": "^4.0.8",
@@ -18,6 +30,18 @@
   "devDependencies": {
     "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^24.0.3",
-    "tsx": "^4.20.3"
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">= 14.18.0"
+  },
+  "sideEffects": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AkiraBit/dir-watcher.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AkiraBit/dir-watcher/issues"
   }
 }

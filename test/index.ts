@@ -33,7 +33,7 @@ export const VALID_IMAGE_EXTS = [
 	".md",
 ];
 
-const watcher = await watch("/Users/jaylenl/Documents/项目/kmenu", {
+const watcher = await watch("/Users/jaylenl/Documents", {
 	fileFilter: (entry) => {
 		if (ignores.some((ignore) => entry.fullPath.includes(ignore))) return false;
 		return VALID_IMAGE_EXTS.includes(parse(entry.path).ext);

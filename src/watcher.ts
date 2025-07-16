@@ -23,7 +23,7 @@ import debounce from "lodash.debounce";
 import { stat } from "node:fs/promises";
 
 export interface WatcherOptions {
-	ignored?: (path: string) => boolean;
+	ignore?: (path: string) => boolean;
 	directoryFilter?: ReaddirpOptions["directoryFilter"];
 	fileFilter?: ReaddirpOptions["fileFilter"];
 	depth?: ReaddirpOptions["depth"];

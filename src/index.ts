@@ -17,3 +17,5 @@ export async function watch(path: string, options?: WatcherOptions) {
 }
 
 export * from "./types";
+export * from "./watcher";
+export * from "./DirTree";

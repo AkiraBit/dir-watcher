@@ -29,6 +29,7 @@ export interface WatcherOptions {
 	depth?: ReaddirpOptions["depth"];
 }
 export class Watcher extends EventEmitter<DirWatcherEventMap> {
+	public ready: boolean = false;
 	public closed: boolean = false;
 	private _path: string;
 	private _options: WatcherOptions;
@@ -36,6 +37,7 @@ export class Watcher extends EventEmitter<DirWatcherEventMap> {
 	private _selfWatcher: StatWatcher | null = null;
 	private _watcher: FSWatcher | null = null;
 	private _isProcessing: boolean = false;
+	private _isInitializing: boolean = true;
 	private _eventQueue: Map<string, Set<string>> = new Map();
 
 	constructor(path: string, options: WatcherOptions = {}) {
@@ -46,6 +48,12 @@ export class Watcher extends EventEmitter<DirWatcherEventMap> {
 	}
 
 	private _init = async () => {
+		// 1. Start watchers to capture all events from the very beginning.
+		this._guardSelf();
+		this._watch();
+
+		// 2. Build the initial directory tree. Events that occur during this time
+		// will be queued but not processed until the tree is fully built.
 		this._dirTree = await this._buildDirTree(this._path, {
 			fileFilter: this._options?.fileFilter,
 			directoryFilter: this._options?.directoryFilter,
@@ -53,8 +61,16 @@ export class Watcher extends EventEmitter<DirWatcherEventMap> {
 			type: "files_directories",
 			alwaysStat: true,
 		});
-		this._guardSelf();
-		this._watch();
+
+		// 3. Mark initialization as complete.
+		this._isInitializing = false;
+
+		// 4. Process any events that were queued during the initial scan.
+		// We call the handler directly to bypass the debounce for this initial catch-up.
+		this._eventsHandler();
+
+		// 5. Emit the ready event, signaling the watcher is fully operational.
+		this.ready = true;
 		this.emit(Event.READY);
 	};
 
@@ -142,7 +158,12 @@ export class Watcher extends EventEmitter<DirWatcherEventMap> {
 	};
 
 	private _eventsHandler = async () => {
-		if (this._isProcessing || this._eventQueue.size === 0) return;
+		if (
+			this._isProcessing ||
+			this._eventQueue.size === 0 ||
+			this._isInitializing
+		)
+			return;
 
 		this._isProcessing = true;
 		const eventsToProcess = Array.from(this._eventQueue.entries());

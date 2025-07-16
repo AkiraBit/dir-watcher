@@ -48,12 +48,8 @@ export class Watcher extends EventEmitter<DirWatcherEventMap> {
 	}
 
 	private _init = async () => {
-		// 1. Start watchers to capture all events from the very beginning.
 		this._guardSelf();
 		this._watch();
-
-		// 2. Build the initial directory tree. Events that occur during this time
-		// will be queued but not processed until the tree is fully built.
 		this._dirTree = await this._buildDirTree(this._path, {
 			fileFilter: this._options?.fileFilter,
 			directoryFilter: this._options?.directoryFilter,
@@ -61,15 +57,8 @@ export class Watcher extends EventEmitter<DirWatcherEventMap> {
 			type: "files_directories",
 			alwaysStat: true,
 		});
-
-		// 3. Mark initialization as complete.
 		this._isInitializing = false;
-
-		// 4. Process any events that were queued during the initial scan.
-		// We call the handler directly to bypass the debounce for this initial catch-up.
 		this._eventsHandler();
-
-		// 5. Emit the ready event, signaling the watcher is fully operational.
 		this.ready = true;
 		this.emit(Event.READY);
 	};
@@ -166,51 +155,51 @@ export class Watcher extends EventEmitter<DirWatcherEventMap> {
 			return;
 
 		this._isProcessing = true;
-		const eventsToProcess = Array.from(this._eventQueue.entries());
-		this._eventQueue.clear();
 
-		const emitterQueue = new Map<Event, Map<string, EventPayload>>([
-			[Event.ADD, new Map()],
-			[Event.REMOVE, new Map()],
-		]);
+		while (this._eventQueue.size > 0) {
+			const eventsToProcess = Array.from(this._eventQueue.entries());
+			this._eventQueue.clear();
 
-		for (const [dir, paths] of eventsToProcess) {
-			await this._diff(dir, paths, emitterQueue);
-		}
+			const emitterQueue = new Map<Event, Map<string, EventPayload>>([
+				[Event.ADD, new Map()],
+				[Event.REMOVE, new Map()],
+			]);
 
-		for (const [event, queue] of emitterQueue.entries()) {
-			if (event === Event.ADD) {
-				for (const [key, payload] of queue.entries()) {
-					if (emitterQueue.get(Event.REMOVE)?.has(key)) {
-						const removePayload = emitterQueue.get(Event.REMOVE)?.get(key);
-						if (
-							payload &&
-							removePayload &&
-							payload.name !== removePayload.name
-						) {
-							this.emit(Event.RENAME, removePayload, payload);
+			await Promise.all(
+				eventsToProcess.map(async ([dir, paths]) =>
+					this._diff(dir, paths, emitterQueue)
+				)
+			);
+
+			for (const [event, queue] of emitterQueue.entries()) {
+				if (event === Event.ADD) {
+					for (const [key, payload] of queue.entries()) {
+						if (emitterQueue.get(Event.REMOVE)?.has(key)) {
+							const removePayload = emitterQueue.get(Event.REMOVE)?.get(key);
+							if (
+								payload &&
+								removePayload &&
+								payload.name !== removePayload.name
+							) {
+								this.emit(Event.RENAME, removePayload, payload);
+							} else {
+								this.emit(Event.MOVE, removePayload, payload);
+							}
 						} else {
-							this.emit(Event.MOVE, removePayload, payload);
+							this.emit(event, payload);
 						}
-					} else {
-						this.emit(event, payload);
 					}
-				}
-			} else if (event === Event.REMOVE) {
-				for (const [key, payload] of queue.entries()) {
-					if (!emitterQueue.get(Event.ADD)?.has(key)) {
-						this.emit(event, payload);
+				} else if (event === Event.REMOVE) {
+					for (const [key, payload] of queue.entries()) {
+						if (!emitterQueue.get(Event.ADD)?.has(key)) {
+							this.emit(event, payload);
+						}
 					}
 				}
 			}
 		}
-		emitterQueue.clear();
-		this._isProcessing = false;
 
-		// If there are new events during processing, trigger again
-		if (this._eventQueue.size > 0) {
-			this._eventsHandler();
-		}
+		this._isProcessing = false;
 	};
 
 	private _diff = async (

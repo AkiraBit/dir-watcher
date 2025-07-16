@@ -34,7 +34,7 @@ export const VALID_IMAGE_EXTS = [
 ];
 
 async function main() {
-	const watcher = await watch("/Users/jaylenl/Documents", {
+	const watcher = await watch("/Users/jaylenl/Documents/项目/kmenu", {
 		fileFilter: (entry) => {
 			if (ignores.some((ignore) => entry.fullPath.includes(ignore)))
 				return false;
@@ -68,8 +68,8 @@ async function main() {
 		console.log("remove", payload.fullPath);
 	});
 
-	watcher.on(Event.RENAME, (payload) => {
-		console.log("rename", payload.fullPath);
+	watcher.on(Event.RENAME, (oldPayload, payload) => {
+		console.log("rename", oldPayload.fullPath, payload.fullPath);
 	});
 
 	watcher.on(Event.CHANGE, (payload, oldPayload) => {

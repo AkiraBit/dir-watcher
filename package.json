@@ -1,7 +1,7 @@
 {
   "name": "dirspy",
   "description": "A simple, efficient and flexible cross-platform directory watching library",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "author": "akirabit",
   "license": "MIT",
   "main": "dist/cjs/index.js",

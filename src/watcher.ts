@@ -8,6 +8,7 @@ import {
 	DirTreeNodeData,
 	DirWatcherEventMap,
 	EventPayload,
+	IgnoredOption,
 } from "./types";
 import {
 	watchFile,
@@ -21,9 +22,10 @@ import {
 import { exists, hashFile } from "./utils";
 import debounce from "lodash.debounce";
 import { stat } from "node:fs/promises";
+import micromatch from "micromatch";
 
 export interface WatcherOptions {
-	ignore?: (path: string) => boolean;
+	ignore?: IgnoredOption;
 	directoryFilter?: ReaddirpOptions["directoryFilter"];
 	fileFilter?: ReaddirpOptions["fileFilter"];
 	depth?: ReaddirpOptions["depth"];
@@ -46,6 +48,20 @@ export class Watcher extends EventEmitter<DirWatcherEventMap> {
 		this._options = options;
 		this._init();
 	}
+
+	private _isIgnored = (path: string): boolean => {
+		if (!this._options.ignore) {
+			return false;
+		}
+
+		// Function-based ignore
+		if (typeof this._options.ignore === "function") {
+			return this._options.ignore(path);
+		}
+
+		// Glob-based ignore
+		return micromatch.isMatch(path, this._options.ignore);
+	};
 
 	private _init = async () => {
 		this._guardSelf();
@@ -349,8 +365,12 @@ export class Watcher extends EventEmitter<DirWatcherEventMap> {
 				{ recursive: true },
 				(event: WatchEventType, filename: string | Buffer | null) => {
 					if (filename) {
-						// The filename may not be a complete path, so we need to join it with the root path
 						const fullPath = join(this._path, filename.toString());
+
+						if (this._isIgnored(fullPath)) {
+							return;
+						}
+
 						const { dir } = parse(fullPath);
 						if (!this._eventQueue.has(dir)) {
 							this._eventQueue.set(dir, new Set());
@@ -360,7 +380,7 @@ export class Watcher extends EventEmitter<DirWatcherEventMap> {
 					}
 				}
 			);
-		} catch (error) {
+		} catch (error: unknown) {
 			this._errorHandler(error);
 		}
 	};
@@ -368,7 +388,7 @@ export class Watcher extends EventEmitter<DirWatcherEventMap> {
 	private _errorHandler = (error: unknown) => {
 		this.emit(
 			Event.ERROR,
-			error instanceof Error ? error : new Error(error?.toString() ?? "")
+			error instanceof Error ? error : new Error(String(error))
 		);
 	};
 

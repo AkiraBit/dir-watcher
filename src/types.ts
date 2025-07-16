@@ -14,6 +14,8 @@ export interface DirTreeNodeData {
 	stats: Stats;
 }
 
+export type IgnoredOption = ((path: string) => boolean) | readonly string[];
+
 export interface DirTreeStats {
 	// file count
 	fileCount: number;

@@ -34,7 +34,15 @@ export const VALID_IMAGE_EXTS = [
 ];
 
 async function main() {
-	const watcher = await watch("/Users/jaylenl/Documents/项目/kmenu", {
+	console.time("ready");
+	const watcher = await watch("/Users/jaylenl/Documents/", {
+		ignore: (path) => {
+			const { ext } = parse(path);
+			return (
+				ignores.some((ignore) => path.includes(ignore)) ||
+				!VALID_IMAGE_EXTS.includes(ext)
+			);
+		},
 		fileFilter: (entry) => {
 			if (ignores.some((ignore) => entry.fullPath.includes(ignore)))
 				return false;
@@ -44,9 +52,8 @@ async function main() {
 			return !ignores.includes(entry.basename);
 		},
 	});
-
 	watcher.on(Event.READY, () => {
-		console.log("ready");
+		console.timeEnd("ready");
 		// const dirTree = watcher._dirTree;
 		// console.log("path", dirTree.getPaths(NodeType.FILE));
 		// const node = dirTree.getNode("/Users/jaylenl/Documents/项目/kmenu/src/hooks");
@@ -82,6 +89,10 @@ async function main() {
 
 	watcher.on(Event.RAW, (eventType, fullPath) => {
 		// console.log("raw", eventType, fullPath);
+	});
+
+	watcher.on(Event.SELF_ENOENT, () => {
+		console.log("self enoent");
 	});
 }
 
